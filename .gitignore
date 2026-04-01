@@ -1,0 +1,22 @@
+
+*.tfstate
+*.tfstate.*
+
+
+.terraform/
+.terraform.lock.hcl
+
+
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+
+# logs
+terraform.tfstate.d
+errored.tfstate
+*.log
+
+# operation system
+.DS_Store
+Thumbs.db
