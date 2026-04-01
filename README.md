@@ -140,14 +140,15 @@ It demonstrates:
 
 ---
 
-## Roadmap
+## Roadmap (Planned Improvements)
 
-* Kubernetes (EKS)
-* CI/CD (GitHub Actions)
-* Prometheus + Grafana monitoring
-* AWS WAF
-* Terraform Cloud
+The following features are planned for future iterations of this project:
 
+- Kubernetes (EKS) for container orchestration
+- CI/CD pipeline using GitHub Actions
+- Advanced monitoring with Prometheus and Grafana
+- AWS WAF for enhanced security
+- Migration to Terraform Cloud
 ---
 
 ## Architecture Diagram
