@@ -181,6 +181,6 @@ This separation ensures scalability, maintainability, and security.
 
 ## Author
 
-* GitHub: https://github.com/YOUR_USERNAME
-* LinkedIn: https://linkedin.com/in/YOUR_NAME
-* Telegram: https://t.me/YOUR_USERNAME
+* GitHub:
+* LinkedIn:
+
