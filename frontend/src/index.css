@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@keyframes move {
+  0% { transform: translateX(-20px); }
+  100% { transform: translateX(64px); }
+}
+
+/* Добавляем класс анимации */
+.animate-move-traffic {
+  animation: move 1.5s linear infinite;
+}
+    @keyframes flow {
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+}
+
+.animate-flow {
+  animation: flow 1.5s linear infinite;
+}

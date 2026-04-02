@@ -20,3 +20,8 @@ errored.tfstate
 # operation system
 .DS_Store
 Thumbs.db
+
+# trash
+node_modules/
+dist/
+.env
