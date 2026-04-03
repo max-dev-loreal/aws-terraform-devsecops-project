@@ -113,26 +113,26 @@ terraform init
 terraform apply
 ```
 📦 Outputs
-ALB DNS → application entry point
-RDS endpoint → database access
+1-ALB DNS → application entry point
+2-RDS endpoint → database access
 🎯 What This Project Demonstrates
-Real-world AWS architecture
-Infrastructure as Code (IaC)
-Secure system design
-Fault-tolerant infrastructure
-Scalable cloud patterns
+1-Real-world AWS architecture
+2-Infrastructure as Code (IaC)
+3-Secure system design
+4-Fault-tolerant infrastructure
+5-Scalable cloud patterns
 🔮 Next Evolution
-Kubernetes (EKS)
-CI/CD (GitHub Actions)
-Observability (Prometheus + Grafana)
-AWS WAF
-Terraform Cloud
+1-Kubernetes (EKS)
+2-CI/CD (GitHub Actions)
+3-Observability (Prometheus + Grafana)
+4-AWS WAF
+5-Terraform Cloud
 🧠 Architecture Principles
-High Availability → Multi-AZ
-Fault Tolerance → ASG + ALB
-Security → Isolation + IAM
-Scalability → Horizontal scaling
-Observability → Monitoring & health checks
+1-High Availability → Multi-AZ
+2-Fault Tolerance → ASG + ALB
+3-Security → Isolation + IAM
+4-Scalability → Horizontal scaling
+5-Observability → Monitoring & health checks
 ⚡ Key Idea
 
 This project is not about AWS.
