@@ -181,6 +181,10 @@ This separation ensures scalability, maintainability, and security.
 
 ## Author
 
-* GitHub:
+* GitHub: https://github.com/max-dev-loreal
 * LinkedIn:
+
+
+## Video
+* YouTube: https://youtu.be/pV7I0Aw345I
 
