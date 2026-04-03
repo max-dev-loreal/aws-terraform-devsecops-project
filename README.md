@@ -105,10 +105,13 @@ Each EC2 instance runs a lightweight web app:
 cd bootstrap
 terraform init
 terraform apply
+```
 2. Main infrastructure
+```bash
 cd ../infra
 terraform init
 terraform apply
+```
 📦 Outputs
 ALB DNS → application entry point
 RDS endpoint → database access
