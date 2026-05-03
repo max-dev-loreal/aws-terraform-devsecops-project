@@ -1,0 +1,23 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t myapp:latest ./app
+
+      - name: Run container and check health
+        run: |
+          docker run -d -p 5000:5000 --name test-app myapp:latest
+          sleep 5
+          curl -f http://localhost:5000/health
