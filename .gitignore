@@ -1,27 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+*.egg-info/
 
+# Secret
+.env
+.env.*
+!.env.example
+
+# Terraform
+**/.terraform/
 *.tfstate
-*.tfstate.*
-
-
-.terraform/
-.terraform.lock.hcl
-
-
+*.tfstate.backup
 *.tfvars
-*.tfvars.json
+!*.tfvars.example
+.terraform.lock.hcl
+crash.log
 override.tf
-override.tf.json
 
-# logs
-terraform.tfstate.d
-errored.tfstate
+# Docker
 *.log
 
-# operation system
+# IDE
+.idea/
+.vscode/
 .DS_Store
-Thumbs.db
-
-# trash
-node_modules/
-dist/
-.env

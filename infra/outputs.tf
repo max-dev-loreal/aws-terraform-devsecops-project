@@ -1,11 +1,11 @@
 output "vpc_id" {
-  value = aws_vpc.main.id
+  value = module.network.vpc_id
 }
 
 output "alb_dns" {
-  value = aws_lb.app_lb.dns_name
+  value = module.alb.dns_name
 }
 
 output "db_endpoint" {
-  value = aws_db_instance.postgres.endpoint
+  value = module.rds.endpoint
 }
