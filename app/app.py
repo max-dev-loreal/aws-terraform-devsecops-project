@@ -1,18 +1,14 @@
-from flask import Flask, jsonify
+"""Local development entrypoint.
 
-app = Flask(__name__)
+Production should run `wsgi:app` via Gunicorn.
+"""
 
+from __future__ import annotations
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World</p>"
+from app import create_app
 
-
-
-@app.route("/health")
-def health():
-    return jsonify({"status": "ok"})
+app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=True)
