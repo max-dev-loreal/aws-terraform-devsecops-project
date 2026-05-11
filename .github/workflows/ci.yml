@@ -1,23 +1,42 @@
 name: CI Pipeline
-
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
 
 jobs:
-  build-and-test:
+  build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
       - name: Build Docker image
-        run: docker build -t myapp:latest ./app
+        run: docker build -t ha-cloud-app:${{ github.sha }} ./app
 
       - name: Run container and check health
         run: |
-          docker run -d -p 8000:8000 --name test-app myapp:latest
+          docker run -d -p 8000:8000 --name test-app ha-cloud-app:${{ github.sha }}
           sleep 5
           curl -f http://localhost:8000/health
+
+      - name: Push to ECR
+        run: |
+          docker tag ha-cloud-app:${{ github.sha }} ${{ secrets.ECR_REGISTRY }}/ha-cloud-app:${{ github.sha }}
+          docker tag ha-cloud-app:${{ github.sha }} ${{ secrets.ECR_REGISTRY }}/ha-cloud-app:latest
+          docker push ${{ secrets.ECR_REGISTRY }}/ha-cloud-app:${{ github.sha }}
+          docker push ${{ secrets.ECR_REGISTRY }}/ha-cloud-app:latest
