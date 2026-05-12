@@ -1,11 +1,10 @@
 name: CI Pipeline
+
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build-and-push:
@@ -34,9 +33,34 @@ jobs:
           sleep 5
           curl -f http://localhost:8000/health
 
-      - name: Push to ECR
+      - name: Tag and Push to ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker tag ha-cloud-app:${{ github.sha }} ${{ secrets.ECR_REGISTRY }}/ha-cloud-app:${{ github.sha }}
-          docker tag ha-cloud-app:${{ github.sha }} ${{ secrets.ECR_REGISTRY }}/ha-cloud-app:latest
-          docker push ${{ secrets.ECR_REGISTRY }}/ha-cloud-app:${{ github.sha }}
-          docker push ${{ secrets.ECR_REGISTRY }}/ha-cloud-app:latest
+          echo "ECR Registry: $REGISTRY"
+          docker tag ha-cloud-app:$IMAGE_TAG $REGISTRY/ha-cloud-app:$IMAGE_TAG
+          docker tag ha-cloud-app:$IMAGE_TAG $REGISTRY/ha-cloud-app:latest
+          docker push $REGISTRY/ha-cloud-app:$IMAGE_TAG
+          docker push $REGISTRY/ha-cloud-app:latest
+
+      - name: Update K8s manifest image tag
+        if: github.ref == 'refs/heads/main'
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          sed -i "s|image: .*|image: $REGISTRY/ha-cloud-app:$IMAGE_TAG|g" k8s/deployment.yaml
+
+      - name: Notify Telegram
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            MSG="✅ *CI Docker* УСПЕШНО\n🐳 SHA: \`${{ github.sha }}\`"
+          else
+            MSG="❌ *CI Docker* УПАЛ\n👤 Автор: ${{ github.actor }}"
+          fi
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d "parse_mode=Markdown" \
+            -d "text=$MSG"
