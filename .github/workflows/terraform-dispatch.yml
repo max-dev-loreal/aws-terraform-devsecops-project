@@ -46,15 +46,9 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Download Plan from S3
+      - name: Terraform Plan
         if: github.event.inputs.action == 'apply'
-        run: |
-          aws s3 cp s3://sqlshark-terraform-plans/plans/${{ github.event.inputs.plan_run_id }}/tfplan ./tfplan
-          if [ ! -f tfplan ]; then
-            echo "ERROR: Plan file not found in S3!"
-            exit 1
-          fi
-          echo "Plan downloaded"
+        run: terraform plan -out=tfplan
 
       - name: Terraform Apply
         if: github.event.inputs.action == 'apply'
