@@ -1,5 +1,7 @@
 resource "aws_vpc" "this" {
   cidr_block = var.vpc_cidr
+  enable_dns_support = true
+  enable_dns_hostnames = true
 
   tags = merge(var.tags, {
     Name = "${var.name_prefix}-vpc"
@@ -160,3 +162,43 @@ resource "aws_vpc_endpoint" "s3" {
   ]
 }
 
+resource "aws_flow_log" "this" {
+  vpc_id                   = aws_vpc.this.id
+  traffic_type             = "ALL"
+  log_destination_type     = "cloud-watch-logs"
+  log_destination          = aws_cloudwatch_log_group.vpc_flow.arn
+  iam_role_arn             = aws_iam_role.flow_logs.arn
+  max_aggregation_interval = 60
+}
+
+resource "aws_cloudwatch_log_group" "vpc_flow" {
+  name              = "/aws/vpc/${var.name_prefix}-flowlogs"
+  retention_in_days = 7
+  tags              = var.tags
+}
+
+resource "aws_iam_role" "flow_logs" {
+  name = "${var.name_prefix}-flowlogs-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "vpc-flow-logs.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy" "flow_logs" {
+  name = "${var.name_prefix}-flowlogs-policy"
+  role = aws_iam_role.flow_logs.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogGroups", "logs:DescribeLogStreams"]
+      Resource = "*"
+    }]
+  })
+}

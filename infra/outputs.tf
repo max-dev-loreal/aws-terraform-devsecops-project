@@ -9,3 +9,6 @@ output "alb_dns" {
 output "db_endpoint" {
   value = module.rds.endpoint
 }
+output "webhook_url" {
+  value = module.lambda_bot.webhook_url
+}

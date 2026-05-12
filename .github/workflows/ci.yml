@@ -36,23 +36,21 @@ jobs:
           echo "ECR_REGISTRY=${MANUAL_REGISTRY}" >> $GITHUB_ENV
 
       - name: Build Docker image
-        run: docker build -t ha-cloud-app:${{ github.sha }} ./app
+        run: docker build -t webapp-prod:${{ github.sha }} ./app
 
       - name: Run container and check health
         run: |
-          docker run -d -p 8000:8000 --name test-app ha-cloud-app:${{ github.sha }}
+          docker run -d -p 8000:8000 --name test-app webapp-prod:${{ github.sha }}
           sleep 5
           curl -f http://localhost:8000/health || (docker logs test-app && exit 1)
           docker stop test-app
           docker rm test-app
-
 
       - name: Tag and Push to ECR
         run: |
           IMAGE_SHA="${{ github.sha }}"
           REGISTRY="${{ env.ECR_REGISTRY }}"
 
-          
           if [ -z "$REGISTRY" ]; then
             echo "ERROR: ECR_REGISTRY is empty!"
             exit 1
@@ -60,15 +58,12 @@ jobs:
           
           echo "Using registry: $REGISTRY"
 
+          docker tag webapp-prod:$IMAGE_SHA $REGISTRY/webapp-prod:$IMAGE_SHA
+          docker push $REGISTRY/webapp-prod:$IMAGE_SHA
 
-
-          docker tag ha-cloud-app:$IMAGE_SHA $REGISTRY/ha-cloud-app:$IMAGE_SHA
-          docker push $REGISTRY/ha-cloud-app:$IMAGE_SHA
-
-          
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            docker tag ha-cloud-app:$IMAGE_SHA $REGISTRY/ha-cloud-app:latest
-            docker push $REGISTRY/ha-cloud-app:latest
+            docker tag webapp-prod:$IMAGE_SHA $REGISTRY/webapp-prod:latest
+            docker push $REGISTRY/webapp-prod:latest
           fi
 
       - name: Update K8s manifest image tag
@@ -79,7 +74,7 @@ jobs:
             echo "ERROR: ECR_REGISTRY is empty!"
             exit 1
           fi
-          sed -i "s|image: .*|image: $REGISTRY/ha-cloud-app:${{ github.sha }}|g" k8s/deployment.yaml
+          sed -i "s|image: .*|image: $REGISTRY/webapp-prod:${{ github.sha }}|g" k8s/deployment.yaml
 
       - name: Notify Telegram
         if: always()

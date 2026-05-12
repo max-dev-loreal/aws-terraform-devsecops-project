@@ -17,6 +17,6 @@ variable "vpc_id" {
 variable "bastion_ssh_cidrs" {
   type        = list(string)
   description = "Allowed CIDRs for SSH to bastion."
-  default     = ["0.0.0.0/0"]
+  default     = []
 }
 

@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 module "network" {
   source = "./modules/network"
 
@@ -29,8 +31,8 @@ module "secrets" {
   name_prefix = local.prefix
   tags        = local.common_tags
 
-  secret_name             = "db-password"
-  recovery_window_in_days = 0
+  secret_name             = "rds-master-credentials-prod"
+  recovery_window_in_days = 7
   secret_string_json = jsonencode({
     username = "postgres"
     password = var.db_password
@@ -40,8 +42,8 @@ module "secrets" {
 module "iam" {
   source = "./modules/iam"
 
-  role_name             = "ec2-secrets-role"
-  instance_profile_name = "ec2-profile"
+  role_name             = "prod-platform-ec2-role"
+  instance_profile_name = "prod-platform-ec2-profile"
   secret_arn            = module.secrets.secret_arn
 }
 
@@ -55,20 +57,33 @@ module "alb" {
   alb_security_group_id = module.security.alb_sg_id
   target_port           = 80
   healthcheck_path      = "/health"
+  certificate_arn       = var.certificate_arn
 }
 
 locals {
+  ecr_registry = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com"
+
   app_user_data = base64encode(<<EOF
 #!/bin/bash
-yum update -y
+set -e
 
-# Install and enable Docker (Amazon Linux 2)
+yum update -y
 yum install -y docker
 systemctl enable docker
 systemctl start docker
-
-# Allow the default user to run docker without sudo
 usermod -aG docker ec2-user || true
+
+aws ecr get-login-password --region ${var.region} | \
+  docker login --username AWS --password-stdin ${local.ecr_registry}
+
+docker pull ${local.ecr_registry}/webapp-prod:${var.app_image_tag}
+
+docker run -d \
+  --name app \
+  -p 80:8000 \
+  -e APP_GREETING="Hello from AWS" \
+  --restart always \
+  ${local.ecr_registry}/webapp-prod:${var.app_image_tag}
 EOF
   )
 }
@@ -130,6 +145,7 @@ module "lambda_bot" {
   telegram_bot_token    = var.telegram_bot_token
   telegram_chat_id      = var.telegram_chat_id
   github_owner          = "max-dev-loreal"
-  github_repo           = "High-Availability-Cloud-Architecture-IaC"
-  github_pat_secret_arn = "arn:aws:secretsmanager:eu-north-1:103242399399:secret:github-terraform-bot-pat-phnqN3"
+  github_repo           = "High-Availability-Cloud-Architecture-IaC-"
+  github_pat_secret_arn = var.github_pat_secret_arn
+  plans_s3_bucket       = "tfplans-platform-prod-103242399399"
 }
