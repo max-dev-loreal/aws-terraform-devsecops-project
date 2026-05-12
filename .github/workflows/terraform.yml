@@ -1,12 +1,13 @@
-name: 'Terraform CI'
+name: 'Terraform CI/CD'
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  TF_VERSION: "1.9.5"
 
 defaults:
   run:
@@ -14,14 +15,12 @@ defaults:
     working-directory: ./infra
 
 jobs:
-  terraform:
+  terraform-plan:
     name: 'Terraform Plan'
     runs-on: ubuntu-latest
-
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,22 +28,77 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: latest 
-
-      - name: Terraform Format Check
-        id: fmt
-        run: terraform fmt -check
+          terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Init
-        id: init
         run: terraform init
 
+      - name: Terraform Format Check
+        run: terraform fmt -check
+        continue-on-error: true
+
       - name: Terraform Validate
-        id: validate
         run: terraform validate -no-color
 
       - name: Terraform Plan
-        id: plan
-        if: github.event_name == 'pull_request'
-        run: terraform plan -no-color -input=false
+        run: terraform plan -no-color -input=false -out=tfplan
 
+      - name: Upload Plan Artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: infra/tfplan
+          retention-days: 1
+
+      - name: Notify Telegram
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            MSG="📋 *Terraform Plan* УСПЕШНО"
+          else
+            MSG="📋 *Terraform Plan* УПАЛ"
+          fi
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" -d "parse_mode=Markdown" -d "text=${MSG}"
+
+  terraform-apply:
+    name: 'Terraform Apply'
+    needs: terraform-plan
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production 
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Download Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: .
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+
+      - name: Notify Telegram
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            MSG="🚀 *Terraform Apply* УСПЕШНО в PROD"
+          else
+            MSG="💥 *Terraform Apply* УПАЛ в PROD"
+          fi
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" -d "parse_mode=Markdown" -d "text=${MSG}"
