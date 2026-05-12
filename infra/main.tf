@@ -123,3 +123,13 @@ module "monitoring" {
   asg_name    = module.compute.asg_name
 }
 
+module "lambda_bot" {
+  source = "./modules/lambda_bot"
+
+  name_prefix           = local.prefix
+  telegram_bot_token    = var.telegram_bot_token
+  telegram_chat_id      = var.telegram_chat_id
+  github_owner          = "max-dev-loreal"
+  github_repo           = "High-Availability-Cloud-Architecture-IaC"
+  github_pat_secret_arn = "arn:aws:secretsmanager:eu-north-1:103242399399:secret:github-terraform-bot-pat-phnqN3"
+}
