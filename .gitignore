@@ -29,3 +29,5 @@ override.tf
 .idea/
 .vscode/
 .DS_Store
+# Lambda deployment package
+bot.zip

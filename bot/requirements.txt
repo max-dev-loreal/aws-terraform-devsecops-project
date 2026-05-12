@@ -1,0 +1,2 @@
+# No external dependencies needed.
+# boto3 and urllib are included in AWS Lambda Python 3.11 runtime.
