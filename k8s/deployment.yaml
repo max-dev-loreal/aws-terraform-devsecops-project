@@ -3,26 +3,33 @@ kind: Deployment
 metadata:
   name: my-app-deployment
   labels:
-   app: web-service
+    app: web-service
 spec:
-     replicas: 2
-     selector:
-       matchLabels:
-         app: web-service
-     template:
-       metadata:
-         labels:
-           app: web-service
-       spec:
-         containers:
-         - name: my-container
-           image: ha-app:latest
-           imagePullPolicy: Never
-           ports:
-           - containerPort: 5000
-           livenessProbe:
-             httpGet:
-               path: /health
-               port: 5000
-             initialDelaySeconds: 5
-             periodSeconds: 10
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-service
+  template:
+    metadata:
+      labels:
+        app: web-service
+    spec:
+      containers:
+      - name: my-container
+        image: 103242399399.dkr.ecr.eu-north-1.amazonaws.com/ha-cloud-app:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
