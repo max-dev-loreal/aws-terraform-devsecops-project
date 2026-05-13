@@ -2,13 +2,13 @@ version: "3.8"
 
 services:
   app:
-    build: ./app
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-statuspage}:${IMAGE_TAG:-latest}
     ports:
       - "8000:8000"
     environment:
-      - APP_VERSION=local-dev
-      - DEPLOY_TIME=unknown
-      - ENVIRONMENT=development
+      - APP_VERSION=${IMAGE_TAG:-latest}
+      - DEPLOY_TIME=${DEPLOY_TIME:-unknown}
+      - ENVIRONMENT=production
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
