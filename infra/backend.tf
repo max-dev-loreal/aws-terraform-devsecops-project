@@ -3,7 +3,7 @@ terraform {
     bucket         = "tfstate-platform-prod-103242399399"
     key            = "global/s3/terraform.tfstate"
     region         = "eu-north-1"
-    use_lockfile = true
+    dynamodb_table = "platform-prod-tflock"
     encrypt        = true
   }
 }
