@@ -2,10 +2,19 @@ provider "aws" {
   region = "eu-north-1"
 }
 
+locals {
+  account_id = "103242399399"
+}
+
+# ─── State Bucket ───
 resource "aws_s3_bucket" "tf_state" {
-  bucket = "sqlshark-terraform-state-bucket"
+  bucket = "tfstate-platform-prod-${local.account_id}"
+
   tags = {
-    Name = "tf-state"
+    Name        = "terraform-state-prod"
+    Environment = "prod"
+    Project     = "platform"
+    ManagedBy   = "terraform"
   }
 }
 
@@ -33,20 +42,15 @@ resource "aws_s3_bucket_versioning" "tf_state_versioning" {
   }
 }
 
-resource "aws_dynamodb_table" "tf_lock" {
-  name         = "terraform-lock"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-}
-
+# ─── Plans Bucket ───
 resource "aws_s3_bucket" "tf_plans" {
-  bucket = "sqlshark-terraform-plans"
+  bucket = "tfplans-platform-prod-${local.account_id}"
+
   tags = {
-    Name = "tf-plans"
+    Name        = "terraform-plans-prod"
+    Environment = "prod"
+    Project     = "platform"
+    ManagedBy   = "terraform"
   }
 }
 
@@ -75,5 +79,27 @@ resource "aws_s3_bucket_lifecycle_configuration" "tf_plans" {
     expiration {
       days = 7
     }
+    noncurrent_version_expiration {
+      noncurrent_days = 1
+    }
+  }
+}
+
+# ─── DynamoDB Lock ───
+resource "aws_dynamodb_table" "tf_lock" {
+  name         = "platform-prod-tflock"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+
+  tags = {
+    Name        = "terraform-lock-prod"
+    Environment = "prod"
+    Project     = "platform"
+    ManagedBy   = "terraform"
   }
 }

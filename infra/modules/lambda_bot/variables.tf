@@ -2,6 +2,12 @@ variable "name_prefix" {
   type = string
 }
 
+variable "tags" {
+  type        = map(string)
+  description = "Common tags applied to resources."
+  default     = {}
+}
+
 variable "telegram_bot_token" {
   type      = string
   sensitive = true
@@ -21,4 +27,9 @@ variable "github_repo" {
 
 variable "github_pat_secret_arn" {
   type = string
+}
+
+variable "plans_s3_bucket" {
+  type        = string
+  description = "S3 bucket containing terraform plans"
 }

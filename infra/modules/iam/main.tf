@@ -1,6 +1,5 @@
 resource "aws_iam_role" "ec2" {
   name = var.role_name
-
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -14,7 +13,6 @@ resource "aws_iam_role" "ec2" {
 resource "aws_iam_role_policy" "secrets_access" {
   name = "${var.role_name}-secrets-access"
   role = aws_iam_role.ec2.id
-
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -30,3 +28,26 @@ resource "aws_iam_instance_profile" "this" {
   role = aws_iam_role.ec2.name
 }
 
+resource "aws_iam_role_policy" "ecr_access" {
+  name = "${var.role_name}-ecr-access"
+  role = aws_iam_role.ec2.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = ["ecr:GetAuthorizationToken"]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ]
+        Resource = "arn:aws:ecr:eu-north-1:103242399399:repository/webapp-prod"
+      }
+    ]
+  })
+}

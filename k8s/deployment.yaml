@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-app-deployment
+  name: webapp-prod-deployment
   labels:
     app: web-service
 spec:
@@ -14,12 +14,22 @@ spec:
       labels:
         app: web-service
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
-      - name: my-container
-        image: 103242399399.dkr.ecr.eu-north-1.amazonaws.com/ha-cloud-app:latest
+      - name: webapp
+        image: 103242399399.dkr.ecr.eu-north-1.amazonaws.com/webapp-prod:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
         resources:
           requests:
             cpu: "100m"

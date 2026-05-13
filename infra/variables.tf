@@ -1,12 +1,15 @@
 variable "region" {
+  type    = string
   default = "eu-north-1"
 }
 
 variable "instance_type" {
+  type    = string
   default = "t3.micro"
 }
 
 variable "db_instance_class" {
+  type    = string
   default = "db.t3.micro"
 }
 
@@ -32,7 +35,6 @@ variable "db_password" {
   type        = string
   description = "DB password stored in Secrets Manager and used for RDS."
   sensitive   = true
-  default     = "StrongPassword123!"
 }
 
 variable "telegram_bot_token" {
@@ -45,5 +47,35 @@ variable "telegram_bot_token" {
 variable "telegram_chat_id" {
   type        = string
   description = "Telegram chat ID for Lambda"
+  default     = ""
+}
+
+variable "app_image_tag" {
+  type        = string
+  description = "Docker image tag to deploy on EC2"
+  default     = "latest"
+}
+
+variable "github_pat_secret_arn" {
+  type        = string
+  description = "ARN of GitHub PAT secret in Secrets Manager"
+  sensitive   = true
+}
+
+variable "github_owner" {
+  type        = string
+  description = "GitHub repository owner"
+  default     = "max-dev-loreal"
+}
+
+variable "github_repo" {
+  type        = string
+  description = "GitHub repository name"
+  default     = "High-Availability-Cloud-Architecture-IaC-"
+}
+
+variable "certificate_arn" {
+  type        = string
+  description = "ACM certificate ARN for HTTPS ALB listener"
   default     = ""
 }

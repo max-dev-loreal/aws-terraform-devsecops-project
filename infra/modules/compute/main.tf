@@ -21,6 +21,16 @@ resource "aws_launch_template" "app" {
 
   user_data = var.user_data_base64
 
+  block_device_mappings {
+    device_name = "/dev/xvda"
+    ebs {
+      volume_size           = 20
+      volume_type           = "gp3"
+      encrypted             = true
+      delete_on_termination = true
+    }
+  }
+
   tag_specifications {
     resource_type = "instance"
     tags          = merge(var.tags, { Name = "${var.name_prefix}-app-instance" })
@@ -63,4 +73,3 @@ resource "aws_instance" "bastion" {
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-bastion" })
 }
-

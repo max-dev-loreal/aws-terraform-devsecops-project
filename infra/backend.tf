@@ -1,9 +1,9 @@
 terraform {
   backend "s3" {
-    bucket         = "sqlshark-terraform-state-bucket"
+    bucket         = "tfstate-platform-prod-103242399399"
     key            = "global/s3/terraform.tfstate"
     region         = "eu-north-1"
-    dynamodb_table = "terraform-lock"
+    dynamodb_table = "platform-prod-tflock"
     encrypt        = true
   }
 }
