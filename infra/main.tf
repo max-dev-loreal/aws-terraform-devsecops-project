@@ -31,7 +31,7 @@ module "secrets" {
   name_prefix = local.prefix
   tags        = local.common_tags
 
-  secret_name             = "rds-master-credentials-prod"
+  secret_name             = "rds-master-credentials-prod-v2"
   recovery_window_in_days = 7
   secret_string_json = jsonencode({
     username = "postgres"
@@ -67,15 +67,25 @@ locals {
 #!/bin/bash
 set -e
 
-yum update -y
-yum install -y docker
+# Install AWS CLI
+apt-get update -y
+apt-get install -y curl unzip
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -q awscliv2.zip
+./aws/install
+rm -rf aws awscliv2.zip
+
+# Install Docker
+apt-get install -y docker.io
 systemctl enable docker
 systemctl start docker
-usermod -aG docker ec2-user || true
+usermod -aG docker ubuntu || true
 
+# Login to ECR
 aws ecr get-login-password --region ${var.region} | \
   docker login --username AWS --password-stdin ${local.ecr_registry}
 
+# Pull and run
 docker pull ${local.ecr_registry}/webapp-prod:${var.app_image_tag}
 
 docker run -d \
@@ -148,4 +158,18 @@ module "lambda_bot" {
   github_repo           = "High-Availability-Cloud-Architecture-IaC-"
   github_pat_secret_arn = var.github_pat_secret_arn
   plans_s3_bucket       = "tfplans-platform-prod-103242399399"
+}
+resource "aws_ecr_repository" "webapp" {
+  name                 = "webapp-prod"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+
+  tags = local.common_tags
 }
