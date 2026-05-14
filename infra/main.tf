@@ -1,5 +1,46 @@
 data "aws_caller_identity" "current" {}
 
+locals {
+  ecr_repo_arn = "arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/webapp-prod"
+  ecr_registry = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com"
+
+  app_user_data = base64encode(<<EOF
+#!/bin/bash
+set -e
+
+# Install AWS CLI
+apt-get update -y
+apt-get install -y curl unzip
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -q awscliv2.zip
+./aws/install
+rm -rf aws awscliv2.zip
+
+# Install Docker
+apt-get install -y docker.io
+systemctl enable docker
+systemctl start docker
+usermod -aG docker ubuntu || true
+
+# Login to ECR
+aws ecr get-login-password --region ${var.region} | \
+  docker login --username AWS --password-stdin ${local.ecr_registry}
+
+# Pull and run
+docker pull ${local.ecr_registry}/webapp-prod:${var.app_image_tag}
+
+docker run -d \
+  --name app \
+  -p 80:8000 \
+  -e APP_VERSION=${var.app_image_tag} \
+  -e DEPLOY_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+  -e ENVIRONMENT=production \
+  --restart always \
+  ${local.ecr_registry}/webapp-prod:${var.app_image_tag}
+EOF
+  )
+}
+
 module "network" {
   source = "./modules/network"
 
@@ -45,6 +86,7 @@ module "iam" {
   role_name             = "prod-platform-ec2-role"
   instance_profile_name = "prod-platform-ec2-profile"
   secret_arn            = module.secrets.secret_arn
+  ecr_repository_arn    = local.ecr_repo_arn  # ← ДОБАВИЛ
 }
 
 module "alb" {
@@ -58,44 +100,6 @@ module "alb" {
   target_port           = 80
   healthcheck_path      = "/health"
   certificate_arn       = var.certificate_arn
-}
-
-locals {
-  ecr_registry = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com"
-
-  app_user_data = base64encode(<<EOF
-#!/bin/bash
-set -e
-
-# Install AWS CLI
-apt-get update -y
-apt-get install -y curl unzip
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip -q awscliv2.zip
-./aws/install
-rm -rf aws awscliv2.zip
-
-# Install Docker
-apt-get install -y docker.io
-systemctl enable docker
-systemctl start docker
-usermod -aG docker ubuntu || true
-
-# Login to ECR
-aws ecr get-login-password --region ${var.region} | \
-  docker login --username AWS --password-stdin ${local.ecr_registry}
-
-# Pull and run
-docker pull ${local.ecr_registry}/webapp-prod:${var.app_image_tag}
-
-docker run -d \
-  --name app \
-  -p 80:8000 \
-  -e APP_GREETING="Hello from AWS" \
-  --restart always \
-  ${local.ecr_registry}/webapp-prod:${var.app_image_tag}
-EOF
-  )
 }
 
 module "compute" {
@@ -154,11 +158,12 @@ module "lambda_bot" {
   name_prefix           = local.prefix
   telegram_bot_token    = var.telegram_bot_token
   telegram_chat_id      = var.telegram_chat_id
-  github_owner          = "max-dev-loreal"
-  github_repo           = "High-Availability-Cloud-Architecture-IaC-"
+  github_owner          = var.github_owner
+  github_repo           = var.github_repo
   github_pat_secret_arn = var.github_pat_secret_arn
-  plans_s3_bucket       = "tfplans-platform-prod-103242399399"
+  plans_s3_bucket       = "tfplans-platform-prod-${data.aws_caller_identity.current.account_id}"
 }
+
 resource "aws_ecr_repository" "webapp" {
   name                 = "webapp-prod"
   force_delete         = true

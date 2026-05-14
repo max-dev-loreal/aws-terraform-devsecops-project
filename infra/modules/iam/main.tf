@@ -29,14 +29,15 @@ resource "aws_iam_instance_profile" "this" {
 }
 
 resource "aws_iam_role_policy" "ecr_access" {
-  name = "${var.role_name}-ecr-access"
-  role = aws_iam_role.ec2.id
+  count = var.ecr_repository_arn != "" ? 1 : 0
+  name  = "${var.role_name}-ecr-access"
+  role  = aws_iam_role.ec2.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = ["ecr:GetAuthorizationToken"]
+        Effect   = "Allow"
+        Action   = ["ecr:GetAuthorizationToken"]
         Resource = "*"
       },
       {
@@ -46,7 +47,7 @@ resource "aws_iam_role_policy" "ecr_access" {
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage"
         ]
-        Resource = "arn:aws:ecr:eu-north-1:103242399399:repository/webapp-prod"
+        Resource = var.ecr_repository_arn
       }
     ]
   })
