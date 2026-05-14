@@ -1,8 +1,9 @@
-import time
 import logging
+import time
 from datetime import datetime, timezone
-from flask import Blueprint, jsonify, render_template, request, current_app
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+
+from flask import Blueprint, current_app, jsonify, render_template, request
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 bp = Blueprint("main", __name__)
 
