@@ -5,9 +5,8 @@ on:
     branches: [main]
 
 env:
-  AWS_REGION: eu-north-1
-  ECR_REGISTRY: 103242399399.dkr.ecr.eu-north-1.amazonaws.com
-  ECR_REPOSITORY: webapp-prod
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/statuspage
 
 jobs:
   lint:
@@ -45,22 +44,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} ./app
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ./app
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
   notify:
     runs-on: ubuntu-latest
@@ -74,7 +70,7 @@ jobs:
             
             Repository: ${{ github.repository }}
             Commit: \`${{ github.sha }}\`
-            Image: $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}"
+            Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
           else
             MSG="💥 *CD Deploy Failed*
             
