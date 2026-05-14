@@ -4,6 +4,9 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, current_app, jsonify, render_template, request
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from sqlalchemy import text
+
+from app import db
 
 bp = Blueprint("main", __name__)
 
@@ -46,12 +49,41 @@ def index():
 
 @bp.get("/health")
 def health():
+    """Liveness probe — проверяет, жив ли процесс."""
     return jsonify(
         {
             "status": "healthy",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "version": current_app.config["VERSION"],
             "uptime_seconds": int(time.time() - START_TIME),
+        }
+    )
+
+
+@bp.get("/ready")
+def ready():
+    """Readiness probe — проверяет готовность к трафику (БД)."""
+    db_status = "unknown"
+    try:
+        db.session.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+        logger.error(f"Database readiness check failed: {e}")
+        return (
+            jsonify(
+                {
+                    "status": "not ready",
+                    "database": db_status,
+                }
+            ),
+            503,
+        )
+
+    return jsonify(
+        {
+            "status": "ready",
+            "database": db_status,
         }
     )
 
@@ -63,12 +95,19 @@ def metrics():
 
 @bp.get("/api/status")
 def api_status():
+    db_status = "unknown"
+    try:
+        db.session.execute(text("SELECT 1"))
+        db_status = "up"
+    except Exception:
+        db_status = "down"
+
     return jsonify(
         {
             "services": {
                 "statuspage": "up",
                 "bot": "unknown",
-                "database": "unknown",
+                "database": db_status,
             },
             "version": current_app.config["VERSION"],
             "environment": current_app.config["ENVIRONMENT"],
