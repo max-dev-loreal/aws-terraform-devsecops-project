@@ -34,7 +34,7 @@ docker run -d \
   -p 80:8000 \
   -e APP_VERSION=${var.app_image_tag} \
   -e DEPLOY_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
-  -e ENVIRONMENT=production \
+  -e ENVIRONMENT=${local.environment} \
   --restart always \
   ${local.ecr_registry}/webapp-prod:${var.app_image_tag}
 EOF
@@ -72,7 +72,7 @@ module "secrets" {
   name_prefix = local.prefix
   tags        = local.common_tags
 
-  secret_name             = "rds-master-credentials-prod-v2"
+  secret_name             = "rds-master-credentials-${local.environment}-v2"
   recovery_window_in_days = 7
   secret_string_json = jsonencode({
     username = "postgres"
@@ -83,10 +83,10 @@ module "secrets" {
 module "iam" {
   source = "./modules/iam"
 
-  role_name             = "prod-platform-ec2-role"
-  instance_profile_name = "prod-platform-ec2-profile"
+  role_name             = "${local.environment}-platform-ec2-role"
+  instance_profile_name = "${local.environment}-platform-ec2-profile"
   secret_arn            = module.secrets.secret_arn
-  ecr_repository_arn    = local.ecr_repo_arn  # ← ДОБАВИЛ
+  ecr_repository_arn    = local.ecr_repo_arn
 }
 
 module "alb" {
