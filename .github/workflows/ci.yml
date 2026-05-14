@@ -22,14 +22,14 @@ jobs:
         run: |
           pip install flake8 black isort
 
-      - name: Lint with flake8
-        run: flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Check import order with isort
+        run: isort --check-only app/
 
       - name: Check formatting with black
         run: black --check app/
 
-      - name: Check imports with isort
-        run: isort --check-only app/
+      - name: Lint with flake8
+        run: flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
 
   test:
     runs-on: ubuntu-latest
@@ -74,6 +74,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, test, build]
     if: github.event_name == 'pull_request'
+    permissions: 
+      pull-requests: write
     steps:
       - name: Comment on PR
         uses: actions/github-script@v7
@@ -83,5 +85,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '✅ All checks passed — ready to merge'
+              body: '✅ All checks passed — ready to merge!'
             })
