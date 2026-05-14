@@ -24,3 +24,5 @@ up:
 
 down:
 	@docker-compose down
+
+# Test CI pipeline trigger
