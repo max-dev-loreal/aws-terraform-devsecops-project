@@ -9,6 +9,7 @@ def create_app():
     app.config["ENVIRONMENT"] = os.getenv("ENVIRONMENT", "local")
 
     from .routes import bp
+
     app.register_blueprint(bp)
 
     return app
