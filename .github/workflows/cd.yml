@@ -5,8 +5,9 @@ on:
     branches: [main]
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: statuspage
+  AWS_REGION: eu-north-1
+  ECR_REGISTRY: 103242399399.dkr.ecr.eu-north-1.amazonaws.com
+  ECR_REPOSITORY: webapp-prod
 
 jobs:
   lint:
@@ -40,23 +41,28 @@ jobs:
     needs: test
     permissions:
       contents: read
-      packages: write
+      id-token: write  # Required for OIDC to AWS
     steps:
       - uses: actions/checkout@v4
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          role-to-assume: arn:aws:iam::103242399399:role/github-actions-ecr-push-role
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Build and push
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ./app
-          docker push ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          docker tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./app
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
   notify:
     runs-on: ubuntu-latest
@@ -67,19 +73,16 @@ jobs:
         run: |
           if [ "${{ needs.build-and-push.result }}" = "success" ]; then
             MSG="🚀 *CD Deploy Successful*
-            
+
             Repository: ${{ github.repository }}
             Commit: \`${{ github.sha }}\`
-            Image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+            Image: \`${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}\`"
           else
             MSG="💥 *CD Deploy Failed*
-            
+
             Repository: ${{ github.repository }}
             Commit: \`${{ github.sha }}\`
-            
+
             [View logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
           fi
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d "parse_mode=Markdown" \
-            -d "text=$MSG"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage"             -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}"             -d "parse_mode=Markdown"             -d "text=$MSG"

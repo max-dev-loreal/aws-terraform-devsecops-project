@@ -13,3 +13,8 @@ variable "secret_arn" {
   description = "Secrets Manager secret ARN that EC2 may read."
 }
 
+variable "ecr_repository_arn" {
+  type        = string
+  description = "ARN of the ECR repository for pulling images."
+  default     = ""
+}
