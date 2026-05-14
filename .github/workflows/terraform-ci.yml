@@ -1,0 +1,74 @@
+name: Terraform CI
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "infra/**"
+      - "bootstrap/**"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "infra/**"
+      - "bootstrap/**"
+
+env:
+  TF_IN_AUTOMATION: true
+
+jobs:
+  terraform-fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+      - name: Terraform Format
+        run: |
+          terraform fmt -check -recursive infra/
+          terraform fmt -check -recursive bootstrap/
+
+  terraform-validate:
+    runs-on: ubuntu-latest
+    needs: terraform-fmt
+    strategy:
+      matrix:
+        dir: [infra, bootstrap]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+      - name: Validate
+        working-directory: ${{ matrix.dir }}
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+  tflint:
+    runs-on: ubuntu-latest
+    needs: terraform-fmt
+    steps:
+      - uses: actions/checkout@v4
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: "v0.50.0"
+      - name: Init TFLint
+        run: tflint --init
+      - name: Run TFLint
+        run: |
+          tflint --chdir=infra --recursive --format compact
+          tflint --chdir=bootstrap --recursive --format compact
+
+  checkov:
+    runs-on: ubuntu-latest
+    needs: [terraform-validate, tflint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: terraform
+          output_format: cli
+          soft_fail: true
+          download_external_modules: true
