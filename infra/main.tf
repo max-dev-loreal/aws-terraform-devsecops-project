@@ -173,18 +173,3 @@ module "lambda_bot" {
   plans_s3_bucket       = "tfplans-platform-prod-${data.aws_caller_identity.current.account_id}"
 }
 
-resource "aws_ecr_repository" "webapp" {
-  name                 = "webapp-prod"
-  force_delete         = true
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-
-  encryption_configuration {
-    encryption_type = "AES256"
-  }
-
-  tags = local.common_tags
-}
