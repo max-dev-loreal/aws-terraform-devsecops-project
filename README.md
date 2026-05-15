@@ -8,16 +8,13 @@ infra/
 app/
 app/Dockerfile
 app/
-LICENSE
 </div>
 🖼️ Visual Preview
-<div align="center">
 Table
 Status Page UI	Architecture Overview
 Dark-themed, real-time monitoring dashboard with Tailwind CSS	Modular Terraform with multi-AZ fault tolerance
-</div>
 <details>
-<summary>📸 <b>Status Page Features</b></summary>
+<summary>📸 Status Page Features</summary>
 
     Real-time uptime counter (JavaScript-driven)
     Service health indicators with animated pulse dots
@@ -28,15 +25,14 @@ Dark-themed, real-time monitoring dashboard with Tailwind CSS	Modular Terraform 
 🚀 Key Features
 Table
 Feature	Description
-🏗️ Modular Terraform	10 reusable modules (network, security, compute, ALB, RDS, WAF, Lambda, IAM, monitoring, endpoints)
+🏗️ Modular Terraform	10 reusable modules: network, security, compute, ALB, RDS, WAF, Lambda, IAM, monitoring, endpoints
 🔒 Security-First	WAFv2 with AWS Managed Rules, encrypted EBS/RDS, private subnets, least-privilege IAM, VPC Flow Logs
 📊 Observability	Prometheus metrics endpoint, CloudWatch auto-scaling alarms, Grafana/Prometheus local stack
 🤖 GitOps Approval Flow	Telegram Lambda bot for manual approve/reject of Terraform apply/destroy plans
 🚀 Zero-Downtime Deploys	Rolling replacement via ASG + ALB health checks, HTTPS redirect when ACM cert is provided
 🧪 Quality Gates	flake8 → black → isort → pytest → docker build → checkov → tflint
-💰 Cost Optimized	Graviton-ready, NAT Gateway per AZ (dev note: swap to NAT instances for non-prod), S3 lifecycle policies
+💰 Cost Optimized	Graviton-ready, NAT Gateway per AZ, S3 lifecycle policies
 🛠️ Tech Stack
-<div align="center">
 Table
 Layer	Technology
 App	Flask 3.1 · Gunicorn · SQLAlchemy 2.0 · Alembic · Prometheus Client
@@ -46,7 +42,6 @@ Cloud	AWS EC2 · ALB · WAFv2 · RDS PostgreSQL · Lambda · API Gateway · ECR 
 IaC	Terraform 1.7+ · TFLint · Checkov
 CI/CD	GitHub Actions (OIDC to AWS)
 Local Monitoring	Prometheus · Grafana · Node Exporter
-</div>
 ⚡ Quick Start
 1. Local Development
 bash
@@ -268,6 +263,8 @@ terraform fmt → terraform validate → tflint → checkov
     Open a Pull Request
 
 CI will automatically validate formatting, run tests, build the container, and post a status comment.
+📄 License
+Distributed under the MIT License. See repository for licensing details.
 <div align="center">
 Built with ☁️ on AWS · Maintained by max-dev-loreal
 </div>
