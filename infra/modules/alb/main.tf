@@ -1,3 +1,14 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+  required_version = ">= 1.5.0"
+}
+
+
 data "aws_caller_identity" "current" {}
 
 resource "aws_lb" "this" {
@@ -6,10 +17,10 @@ resource "aws_lb" "this" {
   subnets            = var.public_subnet_ids
   security_groups    = [var.alb_security_group_id]
 
- # access_logs {
-    #bucket  = aws_s3_bucket.alb_logs.id
-    #prefix  = "alb"
-    #enabled = true
+  # access_logs {
+  #bucket  = aws_s3_bucket.alb_logs.id
+  #prefix  = "alb"
+  #enabled = true
   #}
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-alb" })

@@ -1,3 +1,14 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+  required_version = ">= 1.5.0"
+}
+
+
 resource "aws_db_subnet_group" "this" {
   name       = "${var.name_prefix}-subnet-group"
   subnet_ids = var.db_subnet_ids

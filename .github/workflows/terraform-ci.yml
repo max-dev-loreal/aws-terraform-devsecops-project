@@ -55,10 +55,12 @@ jobs:
           tflint_version: "v0.50.0"
       - name: Init TFLint
         run: tflint --init
-      - name: Run TFLint
+      - name: Run TFLint infra
         run: |
-          tflint --chdir=infra --recursive --format compact
-          tflint --chdir=bootstrap --recursive --format compact
+          cd infra && tflint --recursive --format compact
+      - name: Run TFLint bootstrap
+        run: |
+          cd bootstrap && tflint --recursive --format compact
 
   checkov:
     runs-on: ubuntu-latest
