@@ -102,6 +102,15 @@ module "alb" {
   certificate_arn       = var.certificate_arn
 }
 
+module "waf" {
+  source = "./modules/waf"
+
+  name_prefix = local.prefix
+  tags        = local.common_tags
+  alb_arn     = module.alb.alb_arn
+  rate_limit  = 2000
+}
+
 module "compute" {
   source = "./modules/compute"
 
