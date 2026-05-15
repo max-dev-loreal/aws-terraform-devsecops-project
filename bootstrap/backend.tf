@@ -1,9 +1,30 @@
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+variable "region" {
+  type    = string
+  default = "eu-north-1"
+}
+
+variable "account_id" {
+  type    = string
+  default = "103242399399"
+}
+
 provider "aws" {
-  region = "eu-north-1"
+  region = var.region
 }
 
 locals {
-  account_id = "103242399399"
+  account_id = var.account_id
 }
 
 # ─── State Bucket ───

@@ -1,3 +1,18 @@
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.0"
+    }
+  }
+}
+
 data "archive_file" "bot" {
   type        = "zip"
   source_file = "${path.module}/../../../bot/lambda_function.py"
@@ -23,6 +38,7 @@ resource "aws_lambda_function" "bot" {
       GITHUB_PAT_SECRET_ARN = var.github_pat_secret_arn
       PLANS_S3_BUCKET       = var.plans_s3_bucket
       DYNAMODB_TABLE        = aws_dynamodb_table.approvals.name
+      AWS_REGION            = var.region
     }
   }
 }

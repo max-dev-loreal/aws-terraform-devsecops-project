@@ -8,6 +8,12 @@ variable "tags" {
   default     = {}
 }
 
+variable "region" {
+  type        = string
+  description = "AWS region for boto3 clients."
+  default     = "eu-north-1"
+}
+
 variable "telegram_bot_token" {
   type      = string
   sensitive = true

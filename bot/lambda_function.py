@@ -14,9 +14,11 @@ ALLOWED_CHAT_ID = int(os.environ["TELEGRAM_CHAT_ID"])
 PLAN_BUCKET = os.environ["PLANS_S3_BUCKET"]
 MAX_CALLBACK_AGE_MINUTES = 60
 
-secrets_client = boto3.client("secretsmanager", region_name="eu-north-1")
-dynamodb = boto3.resource("dynamodb", region_name="eu-north-1")
-s3_client = boto3.client("s3", region_name="eu-north-1")
+AWS_REGION = os.environ.get("AWS_REGION", "eu-north-1")
+
+secrets_client = boto3.client("secretsmanager", region_name=AWS_REGION)
+dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
+s3_client = boto3.client("s3", region_name=AWS_REGION)
 
 APPROVALS_TABLE = os.environ.get("DYNAMODB_TABLE", "prod-platform-approvals")
 
@@ -27,6 +29,7 @@ def log_event(level, message, extra=None):
         "level": level,
         "message": message,
         "service": "terraform-approval-bot",
+        "region": AWS_REGION,
     }
     if extra:
         payload.update(extra)
@@ -181,7 +184,7 @@ def lambda_handler(event, context):
         return {"statusCode": 200, "body": "Plan expired"}
 
     if action == "cancel":
-        send_message(chat_id, f"❌ Plan `{run_id}` cancelled by *{username}*.", bot_token)
+        send_message(chat_id, f"❌ Plan `{run_id}` cancelled by *{username}*`.", bot_token)
         return {"statusCode": 200, "body": "Cancelled"}
 
     if action == "destroy" and not data.endswith("|destroy|confirmed"):

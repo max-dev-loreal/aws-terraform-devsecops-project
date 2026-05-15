@@ -1,3 +1,14 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+  required_version = ">= 1.5.0"
+}
+
+
 resource "aws_autoscaling_policy" "scale_up" {
   name                   = "${var.name_prefix}-scale-up"
   autoscaling_group_name = var.asg_name
