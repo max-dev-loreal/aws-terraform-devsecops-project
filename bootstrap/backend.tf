@@ -1,14 +1,3 @@
-terraform {
-  required_version = ">= 1.5.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
 variable "region" {
   type    = string
   default = "eu-north-1"
@@ -97,6 +86,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "tf_plans" {
   rule {
     id     = "expire-plans"
     status = "Enabled"
+    filter {}
     expiration {
       days = 7
     }
