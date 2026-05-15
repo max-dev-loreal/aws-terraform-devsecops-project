@@ -9,7 +9,10 @@ db = SQLAlchemy()
 
 
 def create_app():
-    app = Flask(__name__)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    template_dir = os.path.join(base_dir, "templates")
+
+    app = Flask(__name__, template_folder=template_dir)
     app.config["DEPLOY_TIME"] = os.getenv("DEPLOY_TIME", "unknown")
     app.config["VERSION"] = os.getenv("APP_VERSION", "dev")
     app.config["ENVIRONMENT"] = os.getenv("ENVIRONMENT", "local")
