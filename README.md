@@ -8,11 +8,12 @@ infra/
 app/
 app/Dockerfile
 app/
+LICENSE
 </div>
 🖼️ Visual Preview
 Table
 Status Page UI	Architecture Overview
-Dark-themed, real-time monitoring dashboard with Tailwind CSS	Modular Terraform with multi-AZ fault tolerance
+Dark-themed real-time dashboard with Tailwind CSS	Modular Terraform with multi-AZ fault tolerance
 <details>
 <summary>📸 Status Page Features</summary>
 
@@ -47,12 +48,13 @@ Local Monitoring	Prometheus · Grafana · Node Exporter
 bash
 Copy
 
-# Clone repository
 git clone https://github.com/max-dev-loreal/High-Availability-Cloud-Architecture-IaC-.git
 cd High-Availability-Cloud-Architecture-IaC-
-
-# Start local stack (Flask + Nginx + local DB)
 make up
+
+Visit: http://localhost
+bash
+Copy
 
 # Or manually
 docker-compose up -d --build
@@ -61,7 +63,6 @@ docker-compose up -d --build
 make test
 make lint
 
-Visit: http://localhost (Nginx → Flask:8000)
 2. Bootstrap Remote State (One-Time)
 bash
 Copy
@@ -221,7 +222,7 @@ Lint (flake8/black/isort) → Test (pytest) → Build (Docker) → PR Comment
 
 </details>
 <details>
-<summary><b>CD Pipeline</b> (main → Production)</b></summary>
+<summary><b>CD Pipeline</b> (main → Production)</summary>
 Text
 Copy
 
@@ -233,7 +234,7 @@ Lint → Test → Build & Push to ECR → Telegram Notification
 
 </details>
 <details>
-<summary><b>Terraform CI</b> (infra/* changes)</b></summary>
+<summary><b>Terraform CI</b> (infra/* changes)</summary>
 Text
 Copy
 
@@ -264,7 +265,7 @@ terraform fmt → terraform validate → tflint → checkov
 
 CI will automatically validate formatting, run tests, build the container, and post a status comment.
 📄 License
-Distributed under the MIT License. See repository for licensing details.
+Distributed under the MIT License. See LICENSE for more information.
 <div align="center">
 Built with ☁️ on AWS · Maintained by max-dev-loreal
 </div>
