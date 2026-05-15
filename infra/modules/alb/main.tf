@@ -17,11 +17,11 @@ resource "aws_lb" "this" {
   subnets            = var.public_subnet_ids
   security_groups    = [var.alb_security_group_id]
 
-  # access_logs {
-  #bucket  = aws_s3_bucket.alb_logs.id
-  #prefix  = "alb"
-  #enabled = true
-  #}
+  access_logs {
+    bucket  = aws_s3_bucket.alb_logs.id
+    prefix  = "alb"
+    enabled = true
+  }
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-alb" })
 }
@@ -32,17 +32,38 @@ resource "aws_s3_bucket" "alb_logs" {
   tags = merge(var.tags, { Name = "${var.name_prefix}-alb-logs" })
 }
 
+resource "aws_s3_bucket_public_access_block" "alb_logs" {
+  bucket                  = aws_s3_bucket.alb_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 resource "aws_s3_bucket_policy" "alb_logs" {
   bucket = aws_s3_bucket.alb_logs.id
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { AWS = "arn:aws:iam::127311923021:root" }
-      Action    = "s3:PutObject"
-      Resource  = "${aws_s3_bucket.alb_logs.arn}/alb/*"
-    }]
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::127311923021:root" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.alb_logs.arn}/alb/*"
+      }
+    ]
   })
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+  rule {
+    id     = "expire-logs"
+    status = "Enabled"
+    expiration {
+      days = 30
+    }
+  }
 }
 
 resource "aws_lb_target_group" "this" {
