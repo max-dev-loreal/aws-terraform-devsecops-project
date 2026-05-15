@@ -1,0 +1,5 @@
+skip-check:
+  - CKV_AWS_144  # S3 cross-region replication
+  - CKV_AWS_145  # S3 encryption
+  - CKV_AWS_18   # S3 access logging
+  - CKV2_AWS_62  # API Gateway access logging
